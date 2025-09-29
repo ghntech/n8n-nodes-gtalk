@@ -1,12 +1,20 @@
 {
   "name": "@ghntech/n8n-nodes-gtalk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "This is a community node for n8n to interact with the Ghntech Gtalk API. It allows you to automate tasks related to Gtalk, such as sending messages.",
   "license": "MIT",
   "homepage": "https://gtalk.ghn.vn",
-  "keywords": ["n8n-community-node-package"],
-  "author": { "name": "Phát Làu", "email": "phatlv@ghn.vn" },
-  "repository": { "type": "git", "url": "https://github.com/ghntech/n8n-nodes-gtalk.git" },
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "author": {
+    "name": "Phát Làu",
+    "email": "phatlv@ghn.vn"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ghntech/n8n-nodes-gtalk.git"
+  },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
@@ -20,11 +28,17 @@
     "release": "n8n-node release",
     "prepublishOnly": "n8n-node prerelease"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "n8n": {
     "n8nNodesApiVersion": 1,
-    "credentials": ["dist/credentials/GhntechGtalkApi.credentials.js"],
-    "nodes": ["dist/nodes/GhntechGtalk/GhntechGtalk.node.js"]
+    "credentials": [
+      "dist/credentials/GhntechGtalkApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/GhntechGtalk/GhntechGtalk.node.js"
+    ]
   },
   "devDependencies": {
     "@n8n/node-cli": "*",
@@ -33,5 +47,7 @@
     "release-it": "^19.0.4",
     "typescript": "5.9.2"
   },
-  "peerDependencies": { "n8n-workflow": "*" }
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
 }
