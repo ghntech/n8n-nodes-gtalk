@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "n8n community node to work with the Example API",
   "license": "MIT",
-  "homepage": "https://ghn.vn",
+  "homepage": "https://gtalk.ghn.vn",
   "keywords": ["n8n-community-node-package"],
   "author": { "name": "Phát Làu", "email": "phatlv@ghn.vn" },
   "repository": { "type": "git", "url": "https://github.com/ghntech/n8n-nodes-gtalk.git" },
