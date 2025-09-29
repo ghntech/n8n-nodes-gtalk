@@ -1,12 +1,16 @@
 {
   "name": "@ghntech/n8n-nodes-gtalk",
   "version": "0.1.0",
-  "description": "n8n community node to work with the Example API",
+  "description": "This is a community node for n8n to interact with the Ghntech Gtalk API. It allows you to automate tasks related to Gtalk, such as sending messages.",
   "license": "MIT",
   "homepage": "https://gtalk.ghn.vn",
   "keywords": ["n8n-community-node-package"],
   "author": { "name": "Phát Làu", "email": "phatlv@ghn.vn" },
   "repository": { "type": "git", "url": "https://github.com/ghntech/n8n-nodes-gtalk.git" },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "n8n-node build",
     "build:watch": "tsc --watch",
