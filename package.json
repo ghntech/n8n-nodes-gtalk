@@ -1,6 +1,6 @@
 {
   "name": "@ghntech/n8n-nodes-gtalk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "This is a community node for n8n to interact with the GHN GTalk API. It allows you to automate tasks related to GTalk, such as sending messages.",
   "license": "MIT",
   "homepage": "https://gtalk.ghn.vn",
