@@ -1,6 +1,6 @@
-# Ghntech Gtalk n8n Node
+# GHN GTalk n8n Node
 
-This is a community node for n8n to interact with the Ghntech Gtalk API. It allows you to automate tasks related to Gtalk, such as sending messages.
+This is a community node for n8n to interact with the GHN GTalk API. It allows you to automate tasks related to GTalk, such as sending messages.
 
 ## Features
 
@@ -30,14 +30,14 @@ This node requires `GhntechGtalkApi` credentials. To set them up:
 
 1.  In n8n, click on **Credentials** in the left sidebar.
 2.  Click **New Credential**.
-3.  Search for `Ghntech Gtalk Api` and select it.
+3.  Search for `GHN GTalk API` and select it.
 4.  Provide the **Username** and **Password** for basic authentication. The `OA Token` will be automatically generated from these credentials.
 
 ## Usage Example: Send a Message
 
 To send a message using this node:
 
-1.  Add the **Ghntech Gtalk** node to your workflow.
+1.  Add the **GHN GTalk** node to your workflow.
 2.  Select **Message** as the **Resource**.
 3.  Select **Send** as the **Operation**.
 4.  Provide the **Channel ID** and **Content Text**. The `Client Message ID` will be automatically generated using a timestamp.

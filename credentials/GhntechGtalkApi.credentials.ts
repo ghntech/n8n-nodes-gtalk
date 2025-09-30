@@ -8,10 +8,10 @@ import type {
 export class GhntechGtalkApi implements ICredentialType {
 	name = 'ghntechGtalkApi';
 
-	displayName = 'Ghntech Gtalk API';
+	displayName = 'GHN GTalk API';
 
 	// Link to your community node's README
-	documentationUrl = 'https://github.com/org/@ghntech/-gtalk?tab=readme-ov-file#credentials';
+	documentationUrl = 'https://github.com/ghntech/n8n-nodes-gtalk?tab=readme-ov-file#features';
 
 	properties: INodeProperties[] = [
 		{
