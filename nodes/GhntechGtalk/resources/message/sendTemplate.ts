@@ -75,7 +75,7 @@ export const messageSendTemplateDescription: INodeProperties[] = [
 					rows: 4,
 				},
 				default: '',
-				description: 'Main content of the template message. Supports HTML tags like &lt;br/&gt;',
+				description: 'Main content of the template message. Supports HTML tags like &lt;br/&gt;.',
 			},
 			{
 				displayName: 'Actions',
