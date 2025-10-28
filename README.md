@@ -47,10 +47,10 @@ To send a message using this node:
 
 If you are developing this node, here are some useful commands:
 
-*   `npm run build`: Compiles the TypeScript code to JavaScript.
-*   `npm run build:watch`: Compiles the TypeScript code and watches for changes.
-*   `npm run dev`: Starts n8n in development mode with the node loaded.
-*   `npm run lint`: Lints the code.
-*   `npm run lint:fix`: Lints the code and fixes fixable issues.
-*   `npm run release`: Prepares a new release of the node.
-*   `npm run prepublishOnly`: Runs before publishing the package.
+*   `n8n-node build`: Compiles the TypeScript code to JavaScript.
+*   `n8n-node build:watch`: Compiles the TypeScript code and watches for changes.
+*   `n8n-node dev`: Starts n8n in development mode with the node loaded.
+*   `n8n-node lint`: Lints the code.
+*   `n8n-node lint:fix`: Lints the code and fixes fixable issues.
+*   `n8n-node release`: Prepares a new release of the node.
+*   `n8n-node prepublishOnly`: Runs before publishing the package.
