@@ -18,7 +18,8 @@ export class GhntechGtalk implements INodeType {
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: 'ghntechGtalkApi', required: true }],
 		requestDefaults: {
-			baseURL: 'https://mbff.ghn.vn',
+			//baseURL: 'https://mbff.ghn.vn',
+			baseURL: 'https://test-api.mbff.ghn.tech',
 			headers: {
 				Accept: 'application/json',
 				'Content-Type': 'application/json',
