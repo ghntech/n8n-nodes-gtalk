@@ -133,11 +133,35 @@ export const messageDescription: INodeProperties[] = [
 									
 									// Check if it's a File ID (numeric only)
 									if (/^\d+$/.test(photo)) {
-										// Use File ID directly, but we still need dimensions
-										// For File ID, we'll use default dimensions or skip dimension extraction
+										// Use File ID directly, but we need to fetch dimensions from Detail File API
 										fileId = photo;
-										width = 0;
-										height = 0;
+										
+										// Fetch file details to get dimensions
+										const detailResponse = await this.helpers.httpRequest({
+											method: 'POST',
+											url: `${baseURL}/api/gtalk/detail-file`,
+											body: {
+												oaToken,
+												Id: fileId,
+											},
+											json: true,
+										});
+										
+										// Check for errors in the response
+										if (detailResponse.errorCode !== 'success') {
+											const errorMsg = detailResponse.error?.errorMessage || 'Unknown error';
+											throw new Error(`Failed to retrieve file details for File ID ${fileId}: ${errorMsg}`);
+										}
+										
+										// Parse metadata to get dimensions
+										if (detailResponse.data?.Metadata) {
+											const metadata = JSON.parse(detailResponse.data.Metadata);
+											width = metadata.width || 0;
+											height = metadata.height || 0;
+										} else {
+											width = 0;
+											height = 0;
+										}
 									} else if (photo.startsWith('http://') || photo.startsWith('https://')) {
 										// Download from URL - use httpRequestWithAuthentication to get buffer
 										const response = await this.helpers.httpRequest({
@@ -169,6 +193,7 @@ export const messageDescription: INodeProperties[] = [
 												FileName: fileName,
 												FileSize: imageBuffer.length.toString(),
 												MimeType: mimeType,
+												Metadata: JSON.stringify({ width, height }),
 												oaToken,
 											},
 											json: true,
@@ -252,6 +277,7 @@ export const messageDescription: INodeProperties[] = [
 											FileName: fileName,
 											FileSize: imageBuffer.length.toString(),
 											MimeType: mimeType,
+											Metadata: JSON.stringify({ width, height }),
 											oaToken,
 										},
 										json: true,
@@ -354,11 +380,30 @@ export const messageDescription: INodeProperties[] = [
 									
 									// Check if it's a File ID (numeric only)
 									if (/^\d+$/.test(file)) {
-										// Use File ID directly
+										// Use File ID directly, but we need to fetch file details from Detail File API
 										fileId = file;
-										fileName = '';
-										mimeType = '';
-										fileSize = 0;
+										
+										// Fetch file details to get file information
+										const detailResponse = await this.helpers.httpRequest({
+											method: 'POST',
+											url: `${baseURL}/api/gtalk/detail-file`,
+											body: {
+												oaToken,
+												Id: fileId,
+											},
+											json: true,
+										});
+										
+										// Check for errors in the response
+										if (detailResponse.errorCode !== 'success') {
+											const errorMsg = detailResponse.error?.errorMessage || 'Unknown error';
+											throw new Error(`Failed to retrieve file details for File ID ${fileId}: ${errorMsg}`);
+										}
+										
+										// Extract file information from the response
+										fileName = detailResponse.data?.FileName || '';
+										mimeType = detailResponse.data?.MimeType || '';
+										fileSize = parseInt(detailResponse.data?.FileSize || '0', 10);
 									} else if (file.startsWith('http://') || file.startsWith('https://')) {
 										// Download from URL
 										const response = await this.helpers.httpRequest({
@@ -374,8 +419,23 @@ export const messageDescription: INodeProperties[] = [
 											throw new Error(`File size exceeds 100MB limit (${(fileBuffer.length / 1024 / 1024).toFixed(2)}MB)`);
 										}
 										
-										fileName = file.split('/').pop()?.split('?')[0] || 'file';
-										mimeType = 'application/octet-stream';
+										// Detect file type from buffer
+										const fileType = await import('file-type');
+										const detectedType = await fileType.fromBuffer(fileBuffer);
+										
+										// Extract filename from URL
+										let baseFileName = file.split('/').pop()?.split('?')[0] || 'file';
+										
+										// Use detected MIME type or fallback
+										mimeType = detectedType?.mime || 'application/octet-stream';
+										
+										// Improve filename with detected extension if needed
+										if (detectedType?.ext && !baseFileName.includes('.')) {
+											fileName = `${baseFileName}.${detectedType.ext}`;
+										} else {
+											fileName = baseFileName;
+										}
+										
 										fileSize = fileBuffer.length;
 										
 										// Upload process
@@ -547,11 +607,37 @@ export const messageDescription: INodeProperties[] = [
 									
 									// Check if it's a File ID (numeric only)
 									if (/^\d+$/.test(video)) {
-										// Use File ID directly
+										// Use File ID directly, but we need to fetch dimensions and duration from Detail File API
 										fileId = video;
-										width = 0;
-										height = 0;
-										duration = 0;
+										
+										// Fetch file details to get dimensions and duration
+										const detailResponse = await this.helpers.httpRequest({
+											method: 'POST',
+											url: `${baseURL}/api/gtalk/detail-file`,
+											body: {
+												oaToken,
+												Id: fileId,
+											},
+											json: true,
+										});
+										
+										// Check for errors in the response
+										if (detailResponse.errorCode !== 'success') {
+											const errorMsg = detailResponse.error?.errorMessage || 'Unknown error';
+											throw new Error(`Failed to retrieve file details for File ID ${fileId}: ${errorMsg}`);
+										}
+										
+										// Parse metadata to get dimensions and duration
+										if (detailResponse.data?.Metadata) {
+											const metadata = JSON.parse(detailResponse.data.Metadata);
+											width = metadata.width || 0;
+											height = metadata.height || 0;
+											duration = metadata.duration || 0;
+										} else {
+											width = 0;
+											height = 0;
+											duration = 0;
+										}
 									} else if (video.startsWith('http://') || video.startsWith('https://')) {
 										// Download from URL
 										const response = await this.helpers.httpRequest({
@@ -642,6 +728,7 @@ export const messageDescription: INodeProperties[] = [
 												FileName: fileName,
 												FileSize: videoBuffer.length.toString(),
 												MimeType: mimeType,
+												Metadata: JSON.stringify({ width, height, duration }),
 												oaToken,
 											},
 											json: true,
@@ -784,6 +871,7 @@ export const messageDescription: INodeProperties[] = [
 											FileName: fileName,
 											FileSize: videoBuffer.length.toString(),
 											MimeType: mimeType,
+											Metadata: JSON.stringify({ width, height, duration }),
 											oaToken,
 										},
 										json: true,
