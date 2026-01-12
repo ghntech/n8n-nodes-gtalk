@@ -171,7 +171,7 @@ export const messageDescription: INodeProperties[] = [
 											returnFullResponse: false,
 										});
 										
-										const imageBuffer = response as any;
+										const imageBuffer = response as Buffer;
 										
 										if (imageBuffer.length > MAX_FILE_SIZE) {
 											throw new Error(`File size exceeds 100MB limit (${(imageBuffer.length / 1024 / 1024).toFixed(2)}MB)`);
@@ -197,7 +197,7 @@ export const messageDescription: INodeProperties[] = [
 												oaToken,
 											},
 											json: true,
-										}).then(async (initResponse: any) => {
+										}).then(async (initResponse: { data: { PresignedURL: string; PresignedThumbURL: string; UploadId: string } }) => {
 											const { PresignedURL, PresignedThumbURL, UploadId } = initResponse.data;
 											
 											// Upload original image
@@ -281,7 +281,7 @@ export const messageDescription: INodeProperties[] = [
 											oaToken,
 										},
 										json: true,
-									}).then(async (initResponse: any) => {
+									}).then(async (initResponse: { data: { PresignedURL: string; PresignedThumbURL: string; UploadId: string; Id: string } }) => {
 										const { PresignedURL, PresignedThumbURL, UploadId } = initResponse.data;
 										
 										// Upload original image
@@ -413,7 +413,7 @@ export const messageDescription: INodeProperties[] = [
 											returnFullResponse: false,
 										});
 										
-										const fileBuffer = response as any;
+										const fileBuffer = response as Buffer;
 										
 										if (fileBuffer.length > MAX_FILE_SIZE) {
 											throw new Error(`File size exceeds 100MB limit (${(fileBuffer.length / 1024 / 1024).toFixed(2)}MB)`);
@@ -424,7 +424,7 @@ export const messageDescription: INodeProperties[] = [
 										const detectedType = await fileType.fromBuffer(fileBuffer);
 										
 										// Extract filename from URL
-										let baseFileName = file.split('/').pop()?.split('?')[0] || 'file';
+										const baseFileName = file.split('/').pop()?.split('?')[0] || 'file';
 										
 										// Use detected MIME type or fallback
 										mimeType = detectedType?.mime || 'application/octet-stream';
@@ -450,7 +450,7 @@ export const messageDescription: INodeProperties[] = [
 												oaToken,
 											},
 											json: true,
-										}).then(async (initResponse: any) => {
+										}).then(async (initResponse: { data: { PresignedURL: string; UploadId: string; Id: string } }) => {
 											const { PresignedURL, UploadId } = initResponse.data;
 											
 											// Upload file
@@ -516,7 +516,7 @@ export const messageDescription: INodeProperties[] = [
 											oaToken,
 										},
 										json: true,
-									}).then(async (initResponse: any) => {
+									}).then(async (initResponse: { data: { PresignedURL: string; UploadId: string; Id: string } }) => {
 										const { PresignedURL, UploadId } = initResponse.data;
 										
 										// Upload file
@@ -647,68 +647,80 @@ export const messageDescription: INodeProperties[] = [
 											returnFullResponse: false,
 										});
 										
-										const videoBuffer = response as any;
+										const videoBuffer = response as Buffer;
 										
 										if (videoBuffer.length > MAX_FILE_SIZE) {
 											throw new Error(`File size exceeds 100MB limit (${(videoBuffer.length / 1024 / 1024).toFixed(2)}MB)`);
 										}
 										
 										// Extract metadata and thumbnail using ffmpeg
+										const fsModule = await import('fs');
+										const pathModule = await import('path');
+										const osModule = await import('os');
+										
 										const { width: w, height: h, duration: d, thumbnail } = await new Promise<{
 											width: number;
 											height: number;
 											duration: number;
 											thumbnail: Buffer;
 										}>((resolve, reject) => {
-											const fs = require('fs');
-											const path = require('path');
-											const os = require('os');
-											
 											// Create temp files
-											const tempDir = os.tmpdir();
-											const tempVideoPath = path.join(tempDir, `video_${Date.now()}.mp4`);
-											const tempThumbPath = path.join(tempDir, `thumb_${Date.now()}.png`);
+											const tempDir = osModule.tmpdir();
+											const tempVideoPath = pathModule.join(tempDir, `video_${Date.now()}.mp4`);
+											const tempThumbPath = pathModule.join(tempDir, `thumb_${Date.now()}.png`);
 											
 											// Write video buffer to temp file
-											fs.writeFileSync(tempVideoPath, videoBuffer);
+											fsModule.writeFileSync(tempVideoPath, videoBuffer);
 											
 											// Extract metadata and thumbnail
 											ffmpeg(tempVideoPath)
 												.screenshots({
 													timestamps: ['00:00:00.000'],
-													filename: path.basename(tempThumbPath),
+													filename: pathModule.basename(tempThumbPath),
 													folder: tempDir
 												})
 												.on('end', () => {
 													// Get video metadata
-													ffmpeg.ffprobe(tempVideoPath, (err: any, metadata: any) => {
+													ffmpeg.ffprobe(tempVideoPath, (err, metadata) => {
 														if (err) {
 															// Cleanup
-															try { fs.unlinkSync(tempVideoPath); } catch (e) {}
-															try { fs.unlinkSync(tempThumbPath); } catch (e) {}
+															try { fsModule.unlinkSync(tempVideoPath); } catch {
+																// Ignore cleanup errors
+															}
+															try { fsModule.unlinkSync(tempThumbPath); } catch {
+																// Ignore cleanup errors
+															}
 															reject(err);
 															return;
 														}
 														
-														const videoStream = metadata.streams.find((s: any) => s.codec_type === 'video');
+														const videoStream = metadata.streams.find((s) => s.codec_type === 'video');
 														const w = videoStream?.width || 0;
 														const h = videoStream?.height || 0;
 														const d = Math.floor(metadata.format?.duration || 0);
 														
 														// Read thumbnail
-														const thumbnail = fs.readFileSync(tempThumbPath);
+														const thumbnail = fsModule.readFileSync(tempThumbPath);
 														
 														// Cleanup
-														try { fs.unlinkSync(tempVideoPath); } catch (e) {}
-														try { fs.unlinkSync(tempThumbPath); } catch (e) {}
+														try { fsModule.unlinkSync(tempVideoPath); } catch {
+															// Ignore cleanup errors
+														}
+														try { fsModule.unlinkSync(tempThumbPath); } catch {
+															// Ignore cleanup errors
+														}
 														
 														resolve({ width: w, height: h, duration: d, thumbnail });
 													});
 												})
-												.on('error', (err: any) => {
+												.on('error', (err: Error) => {
 													// Cleanup
-													try { fs.unlinkSync(tempVideoPath); } catch (e) {}
-													try { fs.unlinkSync(tempThumbPath); } catch (e) {}
+													try { fsModule.unlinkSync(tempVideoPath); } catch {
+														// Ignore cleanup errors
+													}
+													try { fsModule.unlinkSync(tempThumbPath); } catch {
+														// Ignore cleanup errors
+													}
 													reject(err);
 												});
 										});
@@ -732,7 +744,7 @@ export const messageDescription: INodeProperties[] = [
 												oaToken,
 											},
 											json: true,
-										}).then(async (initResponse: any) => {
+										}).then(async (initResponse: { data: { PresignedURL: string; PresignedThumbURL: string; UploadId: string; Id: string } }) => {
 											const { PresignedURL, PresignedThumbURL, UploadId } = initResponse.data;
 											
 											// Upload original video
@@ -797,61 +809,73 @@ export const messageDescription: INodeProperties[] = [
 									}
 									
 									// Extract metadata and thumbnail using ffmpeg
+									const fsModule = await import('fs');
+									const pathModule = await import('path');
+									const osModule = await import('os');
+									
 									const { width: w, height: h, duration: d, thumbnail } = await new Promise<{
 										width: number;
 										height: number;
 										duration: number;
 										thumbnail: Buffer;
 									}>((resolve, reject) => {
-										const fs = require('fs');
-										const path = require('path');
-										const os = require('os');
-										
 										// Create temp files
-										const tempDir = os.tmpdir();
-										const tempVideoPath = path.join(tempDir, `video_${Date.now()}.mp4`);
-										const tempThumbPath = path.join(tempDir, `thumb_${Date.now()}.png`);
+										const tempDir = osModule.tmpdir();
+										const tempVideoPath = pathModule.join(tempDir, `video_${Date.now()}.mp4`);
+										const tempThumbPath = pathModule.join(tempDir, `thumb_${Date.now()}.png`);
 										
 										// Write video buffer to temp file
-										fs.writeFileSync(tempVideoPath, videoBuffer);
+										fsModule.writeFileSync(tempVideoPath, videoBuffer);
 										
 										// Extract metadata and thumbnail
 										ffmpeg(tempVideoPath)
 											.screenshots({
 												timestamps: ['00:00:00.000'],
-												filename: path.basename(tempThumbPath),
+												filename: pathModule.basename(tempThumbPath),
 												folder: tempDir
 											})
 											.on('end', () => {
 												// Get video metadata
-												ffmpeg.ffprobe(tempVideoPath, (err: any, metadata: any) => {
+												ffmpeg.ffprobe(tempVideoPath, (err, metadata) => {
 													if (err) {
 														// Cleanup
-														try { fs.unlinkSync(tempVideoPath); } catch (e) {}
-														try { fs.unlinkSync(tempThumbPath); } catch (e) {}
+														try { fsModule.unlinkSync(tempVideoPath); } catch {
+															// Ignore cleanup errors
+														}
+														try { fsModule.unlinkSync(tempThumbPath); } catch {
+															// Ignore cleanup errors
+														}
 														reject(err);
 														return;
 													}
 													
-													const videoStream = metadata.streams.find((s: any) => s.codec_type === 'video');
+													const videoStream = metadata.streams.find((s) => s.codec_type === 'video');
 													const w = videoStream?.width || 0;
 													const h = videoStream?.height || 0;
 													const d = Math.floor(metadata.format?.duration || 0);
 													
 													// Read thumbnail
-													const thumbnail = fs.readFileSync(tempThumbPath);
+													const thumbnail = fsModule.readFileSync(tempThumbPath);
 													
 													// Cleanup
-													try { fs.unlinkSync(tempVideoPath); } catch (e) {}
-													try { fs.unlinkSync(tempThumbPath); } catch (e) {}
+													try { fsModule.unlinkSync(tempVideoPath); } catch {
+														// Ignore cleanup errors
+													}
+													try { fsModule.unlinkSync(tempThumbPath); } catch {
+														// Ignore cleanup errors
+													}
 													
 													resolve({ width: w, height: h, duration: d, thumbnail });
 												});
 											})
-											.on('error', (err: any) => {
+											.on('error', (err: Error) => {
 												// Cleanup
-												try { fs.unlinkSync(tempVideoPath); } catch (e) {}
-												try { fs.unlinkSync(tempThumbPath); } catch (e) {}
+												try { fsModule.unlinkSync(tempVideoPath); } catch {
+													// Ignore cleanup errors
+												}
+												try { fsModule.unlinkSync(tempThumbPath); } catch {
+													// Ignore cleanup errors
+												}
 												reject(err);
 											});
 									});
@@ -875,7 +899,7 @@ export const messageDescription: INodeProperties[] = [
 											oaToken,
 										},
 										json: true,
-									}).then(async (initResponse: any) => {
+									}).then(async (initResponse: { data: { PresignedURL: string; PresignedThumbURL: string; UploadId: string; Id: string } }) => {
 										const { PresignedURL, PresignedThumbURL, UploadId } = initResponse.data;
 										
 										// Upload original video
