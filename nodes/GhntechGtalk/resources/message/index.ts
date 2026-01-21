@@ -584,9 +584,11 @@ export const messageDescription: INodeProperties[] = [
 						preSend: [
 							async function (this, requestOptions) {
 								const sharp = (await import('sharp')).default;
-								const ffmpeg = (await import('fluent-ffmpeg')).default;
-								const ffmpegPath = (await import('@ffmpeg-installer/ffmpeg')).path;
-								ffmpeg.setFfmpegPath(ffmpegPath);
+								const ffmpegPath = require('ffmpeg-static');
+								const ffprobePath = require('ffprobe-static').path;
+								const { promisify } = await import('util');
+								const { exec } = await import('child_process');
+								const execAsync = promisify(exec);
 								
 								const channelId = this.getNodeParameter('channelId', 0) as string;
 								const videoSource = this.getNodeParameter('videoSource', 0) as string;
@@ -672,33 +674,21 @@ export const messageDescription: INodeProperties[] = [
 											// Write video buffer to temp file
 											fsModule.writeFileSync(tempVideoPath, videoBuffer);
 											
-											// Extract metadata and thumbnail
-											ffmpeg(tempVideoPath)
-												.screenshots({
-													timestamps: ['00:00:00.000'],
-													filename: pathModule.basename(tempThumbPath),
-													folder: tempDir
-												})
-												.on('end', () => {
-													// Get video metadata
-													ffmpeg.ffprobe(tempVideoPath, (err, metadata) => {
-														if (err) {
-															// Cleanup
-															try { fsModule.unlinkSync(tempVideoPath); } catch {
-																// Ignore cleanup errors
-															}
-															try { fsModule.unlinkSync(tempThumbPath); } catch {
-																// Ignore cleanup errors
-															}
-															reject(err);
-															return;
-														}
-														
-														const videoStream = metadata.streams.find((s) => s.codec_type === 'video');
-														const w = videoStream?.width || 0;
-														const h = videoStream?.height || 0;
-														const d = Math.floor(metadata.format?.duration || 0);
-														
+											// First, get video metadata using ffprobe
+											const ffprobeCommand = `"${ffprobePath}" -v error -show_entries format=duration:stream=width,height,codec_type -of json "${tempVideoPath}"`;
+											
+											execAsync(ffprobeCommand)
+												.then(({ stdout }) => {
+													const metadata = JSON.parse(stdout);
+													const videoStream = metadata.streams?.find((s: any) => s.codec_type === 'video');
+													const w = videoStream?.width || 0;
+													const h = videoStream?.height || 0;
+													const d = Math.floor(parseFloat(metadata.format?.duration || '0'));
+													
+													// Extract thumbnail using ffmpeg
+													const ffmpegCommand = `"${ffmpegPath}" -i "${tempVideoPath}" -ss 00:00:00.000 -vframes 1 "${tempThumbPath}"`;
+													
+													return execAsync(ffmpegCommand).then(() => {
 														// Read thumbnail
 														const thumbnail = fsModule.readFileSync(tempThumbPath);
 														
@@ -713,7 +703,7 @@ export const messageDescription: INodeProperties[] = [
 														resolve({ width: w, height: h, duration: d, thumbnail });
 													});
 												})
-												.on('error', (err: Error) => {
+												.catch((err: Error) => {
 													// Cleanup
 													try { fsModule.unlinkSync(tempVideoPath); } catch {
 														// Ignore cleanup errors
@@ -827,33 +817,21 @@ export const messageDescription: INodeProperties[] = [
 										// Write video buffer to temp file
 										fsModule.writeFileSync(tempVideoPath, videoBuffer);
 										
-										// Extract metadata and thumbnail
-										ffmpeg(tempVideoPath)
-											.screenshots({
-												timestamps: ['00:00:00.000'],
-												filename: pathModule.basename(tempThumbPath),
-												folder: tempDir
-											})
-											.on('end', () => {
-												// Get video metadata
-												ffmpeg.ffprobe(tempVideoPath, (err, metadata) => {
-													if (err) {
-														// Cleanup
-														try { fsModule.unlinkSync(tempVideoPath); } catch {
-															// Ignore cleanup errors
-														}
-														try { fsModule.unlinkSync(tempThumbPath); } catch {
-															// Ignore cleanup errors
-														}
-														reject(err);
-														return;
-													}
-													
-													const videoStream = metadata.streams.find((s) => s.codec_type === 'video');
-													const w = videoStream?.width || 0;
-													const h = videoStream?.height || 0;
-													const d = Math.floor(metadata.format?.duration || 0);
-													
+										// First, get video metadata using ffprobe
+										const ffprobeCommand = `"${ffprobePath}" -v error -show_entries format=duration:stream=width,height,codec_type -of json "${tempVideoPath}"`;
+										
+										execAsync(ffprobeCommand)
+											.then(({ stdout }) => {
+												const metadata = JSON.parse(stdout);
+												const videoStream = metadata.streams?.find((s: any) => s.codec_type === 'video');
+												const w = videoStream?.width || 0;
+												const h = videoStream?.height || 0;
+												const d = Math.floor(parseFloat(metadata.format?.duration || '0'));
+												
+												// Extract thumbnail using ffmpeg
+												const ffmpegCommand = `"${ffmpegPath}" -i "${tempVideoPath}" -ss 00:00:00.000 -vframes 1 "${tempThumbPath}"`;
+												
+												return execAsync(ffmpegCommand).then(() => {
 													// Read thumbnail
 													const thumbnail = fsModule.readFileSync(tempThumbPath);
 													
@@ -868,7 +846,7 @@ export const messageDescription: INodeProperties[] = [
 													resolve({ width: w, height: h, duration: d, thumbnail });
 												});
 											})
-											.on('error', (err: Error) => {
+											.catch((err: Error) => {
 												// Cleanup
 												try { fsModule.unlinkSync(tempVideoPath); } catch {
 													// Ignore cleanup errors
