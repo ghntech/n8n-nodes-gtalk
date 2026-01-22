@@ -584,8 +584,11 @@ export const messageDescription: INodeProperties[] = [
 						preSend: [
 							async function (this, requestOptions) {
 								const sharp = (await import('sharp')).default;
-								const ffmpegPath = require('ffmpeg-static');
-								const ffprobePath = require('ffprobe-static').path;
+								const ffmpegStatic = await import('ffmpeg-static');
+								const ffmpegPath = ffmpegStatic.default;
+								// eslint-disable-next-line @typescript-eslint/no-explicit-any
+								const ffprobeStatic = (await import('ffprobe-static' as any)) as any;
+								const ffprobePath = ffprobeStatic.path as string;
 								const { promisify } = await import('util');
 								const { exec } = await import('child_process');
 								const execAsync = promisify(exec);
@@ -680,6 +683,7 @@ export const messageDescription: INodeProperties[] = [
 											execAsync(ffprobeCommand)
 												.then(({ stdout }) => {
 													const metadata = JSON.parse(stdout);
+													// eslint-disable-next-line @typescript-eslint/no-explicit-any
 													const videoStream = metadata.streams?.find((s: any) => s.codec_type === 'video');
 													const w = videoStream?.width || 0;
 													const h = videoStream?.height || 0;
@@ -823,6 +827,7 @@ export const messageDescription: INodeProperties[] = [
 										execAsync(ffprobeCommand)
 											.then(({ stdout }) => {
 												const metadata = JSON.parse(stdout);
+												// eslint-disable-next-line @typescript-eslint/no-explicit-any
 												const videoStream = metadata.streams?.find((s: any) => s.codec_type === 'video');
 												const w = videoStream?.width || 0;
 												const h = videoStream?.height || 0;
