@@ -584,11 +584,9 @@ export const messageDescription: INodeProperties[] = [
 						preSend: [
 							async function (this, requestOptions) {
 								const sharp = (await import('sharp')).default;
-								const ffmpegStatic = await import('ffmpeg-static');
-								const ffmpegPath = ffmpegStatic.default;
-								// eslint-disable-next-line @typescript-eslint/no-explicit-any
-								const ffprobeStatic = (await import('ffprobe-static' as any)) as any;
-								const ffprobePath = ffprobeStatic.path as string;
+								// Use system-installed ffmpeg and ffprobe
+								const ffmpegPath = 'ffmpeg';
+								const ffprobePath = 'ffprobe';
 								const { promisify } = await import('util');
 								const { exec } = await import('child_process');
 								const execAsync = promisify(exec);
