@@ -45,7 +45,6 @@
   },
   "devDependencies": {
     "@n8n/node-cli": "*",
-    "@types/fluent-ffmpeg": "^2.1.28",
     "@types/node": "^25.0.3",
     "eslint": "9.32.0",
     "prettier": "3.6.2",
@@ -56,9 +55,9 @@
     "n8n-workflow": "*"
   },
   "dependencies": {
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
     "file-type": "^16.5.4",
-    "fluent-ffmpeg": "^2.1.3",
     "sharp": "^0.33.5"
   }
 }
