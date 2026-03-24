@@ -28,13 +28,28 @@ export const messageDescription: INodeProperties[] = [
 					request: {
 						method: 'POST',
 						url: '/api/gtalk/send-message',
-						body: {
-							channelId: '={{$parameter.channelId}}',
-							clientMsgId: '={{Date.now()}}',
-							content: {
-								text: '={{$parameter.contentText}}',
+					},
+					send: {
+						preSend: [
+							async function (this, requestOptions) {
+								const channelId = this.getNodeParameter('channelId', 0) as string;
+								const contentText = this.getNodeParameter('contentText', 0) as string;
+								const additionalFields = this.getNodeParameter('additionalFields', 0, {}) as { parseMode?: string };
+
+								const content: Record<string, unknown> = { text: contentText };
+								if (additionalFields.parseMode) {
+									content.parseMode = additionalFields.parseMode;
+								}
+
+								requestOptions.body = {
+									channelId,
+									clientMsgId: Date.now().toString(),
+									content,
+								};
+
+								return requestOptions;
 							},
-						},
+						],
 					},
 				},
 			},
@@ -85,13 +100,19 @@ export const messageDescription: INodeProperties[] = [
 									data: JSON.stringify(dataObject),
 								};
 
+								// Get parseMode from additionalFields
+								const additionalFields = this.getNodeParameter('additionalFields', 0, {}) as { parseMode?: string };
+
 								// Build the request body
+								const content: Record<string, unknown> = { template };
+								if (additionalFields.parseMode) {
+									content.parseMode = additionalFields.parseMode;
+								}
+
 								requestOptions.body = {
 									channelId,
 									clientMsgId: Date.now().toString(),
-									content: {
-										template,
-									},
+									content,
 								};
 
 								return requestOptions;
@@ -323,24 +344,32 @@ export const messageDescription: INodeProperties[] = [
 									});
 								}
 								
+								// Get parseMode from additionalFields
+								const additionalFieldsPhoto = this.getNodeParameter('additionalFields', 0, {}) as { parseMode?: string };
+
 								// Build the request body for sending photo message
+								const contentPhoto: Record<string, unknown> = {
+									attachment: {
+										caption,
+										items: [
+											{
+												image: {
+													fileId,
+													width,
+													height,
+												},
+											},
+										],
+									},
+								};
+								if (additionalFieldsPhoto.parseMode) {
+									contentPhoto.parseMode = additionalFieldsPhoto.parseMode;
+								}
+
 								requestOptions.body = {
 									channelId,
 									clientMsgId: Date.now().toString(),
-									content: {
-										attachment: {
-											caption,
-											items: [
-												{
-													image: {
-														fileId,
-														width,
-														height,
-													},
-												},
-											],
-										},
-									},
+									content: contentPhoto,
 								};
 								
 								return requestOptions;
@@ -922,25 +951,33 @@ export const messageDescription: INodeProperties[] = [
 									});
 								}
 								
+								// Get parseMode from additionalFields
+								const additionalFieldsVideo = this.getNodeParameter('additionalFields', 0, {}) as { parseMode?: string };
+
 								// Build the request body for sending video message
+								const contentVideo: Record<string, unknown> = {
+									attachment: {
+										caption,
+										items: [
+											{
+												video: {
+													fileId,
+													width,
+													height,
+													duration,
+												},
+											},
+										],
+									},
+								};
+								if (additionalFieldsVideo.parseMode) {
+									contentVideo.parseMode = additionalFieldsVideo.parseMode;
+								}
+
 								requestOptions.body = {
 									channelId,
 									clientMsgId: Date.now().toString(),
-									content: {
-										attachment: {
-											caption,
-											items: [
-												{
-													video: {
-														fileId,
-														width,
-														height,
-														duration,
-													},
-												},
-											],
-										},
-									},
+									content: contentVideo,
 								};
 								
 								return requestOptions;

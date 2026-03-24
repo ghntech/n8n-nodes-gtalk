@@ -78,4 +78,39 @@ export const messageSendPhotoDescription: INodeProperties[] = [
 			},
 		},
 	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				operation: ['sendPhoto'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Parse Mode',
+				name: 'parseMode',
+				type: 'options',
+				options: [
+					{
+						name: 'Plain Text',
+						value: 'PLAIN_TEXT',
+					},
+					{
+						name: 'Markdown',
+						value: 'MARKDOWN',
+					},
+					{
+						name: 'HTML',
+						value: 'HTML',
+					},
+				],
+				default: 'PLAIN_TEXT',
+				description: 'How to parse the message content',
+			},
+		],
+	},
 ];
